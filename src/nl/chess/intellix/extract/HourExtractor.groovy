@@ -15,25 +15,25 @@ class HourExtractor extends AgileFantExtractor {
         targetSql.execute("drop table if exists ex_hourentry")
         targetSql.execute('''
 				create table ex_hourentry (
-                    entry_id        bigint,
-                    entry_fullname  varchar(255),
                     minutes_spent   bigint,
                     story_id        int,
-                    task_id         int
+                    task_id         int,
+
+                    index(story_id),
+                    index(task_id)
 				) engine=InnoDB
 		''')
 
         LOG.info('Extracting tasks from AgileFant.')
         def tasks = sourceSql.rows("""
-          select h.id, u.fullname, sum(h.minutesSpent) as minutesSpent, h.story_id, h.task_id
+          select sum(h.minutesSpent) as minutesSpent, h.story_id, h.task_id
           from hourentries h
-          left outer join users u on h.user_id = u.id
-          group by h.id, u.fullname, h.story_id, h.task_id""")
+          group by h.story_id, h.task_id""")
 
         targetSql.withTransaction {
-            targetSql.withBatch(50, 'insert into ex_hourentry (entry_id, entry_fullname, minutes_spent, story_id, task_id) values (?, ?, ?, ?, ?)') { stmt ->
+            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, story_id, task_id) values (?, ?, ?)') { stmt ->
                 tasks.each {
-                    stmt.addBatch([it.id, it.fullname, it.minutesSpent, it.story_id, it.task_id])
+                    stmt.addBatch([it.minutesSpent, it.story_id, it.task_id])
                 }
             }
         }
@@ -44,15 +44,28 @@ class HourExtractor extends AgileFantExtractor {
           where h.task_id = t.task_id
           and h.task_id is not null""")
 
-        targetSql.execute("""
-          update ex_hourentry h
-          set h.story_id = -1
-          where h.story_id is null""")
+        def hoursWithoutTask = targetSql.rows("""
+            select distinct story_id, st.sprint_id
+            from ex_hourentry h
+            inner join ex_story st
+            on h.story_id = st.id
+            where task_id is null""")
+        int id = -1;
+        hoursWithoutTask.each {
+            targetSql.execute("""
+              INSERT INTO ex_task
+              (task_id, task_name, has_original_estimate, has_effort_left, original_estimate, effort_left, state_id, state, sprint_id, story_id)
+              VALUES
+              ($id, 'None', 0, 0, 0, 0, -1, 'Unknown', $it.sprint_id, $it.story_id)""")
+            targetSql.execute("""update ex_hourentry set task_id = $id where task_id is null and story_id=$it.story_id""")
+            id--
+        }
 
         targetSql.execute("""
-          update ex_hourentry h
-          set h.task_id = -1
-          where h.task_id is null""")
+            insert into ex_hourentry (minutes_spent, story_id, task_id)
+            select 0 as minutes_spent, story_id, task_id from ex_task where ex_task.task_id not in (select task_id from ex_hourentry)
+        """)
+
 
     }
 

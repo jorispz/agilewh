@@ -43,8 +43,6 @@ class BacklogExtractor extends AgileFantExtractor {
         def tasks = sourceSql.rows("""
           select * from backlogs where backlogtype='Product' """)
 
-        targetSql.execute("""insert into ex_product(id, name) values (-1, 'None')""")
-
         targetSql.withTransaction {
             targetSql.withBatch(50, 'insert into ex_product (id, name) values (?, ?)') { stmt ->
                 tasks.each {
@@ -57,7 +55,6 @@ class BacklogExtractor extends AgileFantExtractor {
         tasks = sourceSql.rows("""
           select * from backlogs where backlogtype='Project' """)
 
-        targetSql.execute("""insert into ex_project(id, name, product_id) values (-1, 'None', -1)""")
         targetSql.withTransaction {
             targetSql.withBatch(50, 'insert into ex_project (id, name, product_id) values (?, ?, ?)') { stmt ->
                 tasks.each {
@@ -70,7 +67,6 @@ class BacklogExtractor extends AgileFantExtractor {
         tasks = sourceSql.rows("""
           select * from backlogs where backlogtype='Iteration'""")
 
-        targetSql.execute("""insert into ex_sprint(id, name, project_id) values (-1, 'None', -1)""")
         targetSql.withTransaction {
             targetSql.withBatch(50, 'insert into ex_sprint (id, name, project_id) values (?, ?, ?)') { stmt ->
                 tasks.each {

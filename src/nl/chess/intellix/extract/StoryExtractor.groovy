@@ -36,11 +36,6 @@ class StoryExtractor extends AgileFantExtractor {
 		''')
 
         LOG.info('Extracting stories from AgileFant.')
-        targetSql.execute("""
-          INSERT INTO ex_story
-          (id, name, state_id, state, has_points, has_value, story_points, story_value, backlog_id, parent_id, parent_name, product_id, product_name, project_id, project_name, sprint_id, sprint_name)
-          VALUES
-          (-1, 'None', -1, 'Unknown', 0, 0, 0, 0, null, null, null, null, null, null, null, null, null)""")
         def tasks = sourceSql.rows("""
           select * from stories """)
 
@@ -82,16 +77,6 @@ class StoryExtractor extends AgileFantExtractor {
           and prod.id = pro.product_id""")
 
         targetSql.execute("""
-          update ex_story st
-          set st.project_id = -1, st.project_name = 'Not assigned'
-          where st.project_id is null""")
-
-        targetSql.execute("""
-          update ex_story st
-          set st.sprint_id = -1, st.sprint_name = 'Not assigned'
-          where st.sprint_id is null""")
-
-        targetSql.execute("""
           update ex_story st1, ex_story st2
           set st1.parent_name = st2.name
           where st2.id = st1.parent_id
@@ -105,6 +90,27 @@ class StoryExtractor extends AgileFantExtractor {
         targetSql.execute("""
         update ex_story story, ex_state state
         set story.state = state.name where story.state_id = state.id""")
+
+        def storiesWithoutProject = targetSql.rows("""
+          select distinct product_id as product_id from ex_story where project_id is null
+        """)
+        int id = -1;
+        storiesWithoutProject.each {
+            int productID = it.product_id
+            targetSql.execute("""insert into ex_project (id, name, product_id) values ($id, 'None', $productID)""")
+            targetSql.execute("""update ex_story set project_id = $id, project_name = 'None' where project_id is null and product_id=$productID""")
+            id--
+         }
+
+        def storiesWithoutSprint = targetSql.rows("""select distinct project_id from ex_story where sprint_id is null""")
+        id = -1;
+        storiesWithoutSprint.each {
+            int projectID = it.project_id
+            targetSql.execute("""insert into ex_sprint (id, name, project_id) values ($id, 'None', $projectID)""")
+            targetSql.execute("""update ex_story set sprint_id = $id, sprint_name = 'None' where sprint_id is null and project_id=$projectID""")
+            id--
+        }
+
     }
 
 }

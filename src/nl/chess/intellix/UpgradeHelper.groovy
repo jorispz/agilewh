@@ -65,7 +65,8 @@ class UpgradeHelper implements Upgradeable {
 					unique index (ID),
 					unique index (rowid),
 					index (action),
-					index (type1hash)
+					index (type1hash),
+					index(task_id)
 				) engine=InnoDB
 			"""
 
@@ -107,7 +108,8 @@ class UpgradeHelper implements Upgradeable {
 					unique index (ID),
 					unique index (rowid),
 					index (action),
-					index (type1hash)
+					index (type1hash),
+					index(story_id)
 				) engine=InnoDB
 			"""
 
@@ -117,8 +119,8 @@ class UpgradeHelper implements Upgradeable {
                     type1hash       binary(32),
                     lastUpdated     datetime not null,
 
-                    story_id                  bigint not null,
-                    task_id                   bigint not null,
+                    s_id                  bigint not null,
+                    t_id                   bigint not null,
                     original_estimate_minutes int not null,
                     original_estimate_hours   decimal(12, 1) not null,
                     effort_left_minutes       int not null,
@@ -128,8 +130,8 @@ class UpgradeHelper implements Upgradeable {
 
                     constraint primary key (ID),
                     index (type1hash),
-                    foreign key (story_id) references di_story(ID),
-                    foreign key (task_id) references di_task(ID)
+                    foreign key (s_id) references di_story(ID),
+                    foreign key (t_id) references di_task(ID)
 				) engine=InnoDB
 			"""
 
@@ -140,8 +142,8 @@ class UpgradeHelper implements Upgradeable {
 					action			char(1),
 					type1hash		binary(32),
 
-                    story_id                  bigint not null,
-                    task_id                   bigint not null,
+                    s_id                      bigint not null,
+                    t_id                      bigint not null,
                     original_estimate_minutes int not null,
                     original_estimate_hours   decimal(12, 1) not null,
                     effort_left_minutes       int not null,

@@ -96,16 +96,19 @@ story.transformAndLoad(targetDS);
 
 Dimension hour = new Dimension()
 hour.name='hourentry'
-hour.naturalKeyColumns = ['story_id', 'task_id']
+hour.naturalKeyColumns = ['s_id', 't_id']
 hour.transformSQL = """
     insert into st_hourentry
-        (story_id, task_id, original_estimate_minutes, original_estimate_hours, effort_spent_minutes, effort_spent_hours, effort_left_minutes, effort_left_hours)
+        (s_id, t_id, original_estimate_minutes, original_estimate_hours, effort_spent_minutes, effort_spent_hours, effort_left_minutes, effort_left_hours)
     select
          s.ID, t.ID, sum(et.original_estimate), sum(et.original_estimate)/60, sum(minutes_spent), sum(minutes_spent)/60, sum(et.effort_left), sum(et.effort_left)/60
-    from st_task t, st_story s, ex_hourentry h, ex_task et
-    where et.task_id = h.task_id
-    and   t.task_id = h.task_id
-    and     s.story_id = h.story_id
+    from ex_hourentry h
+    inner join st_task t
+    on h.task_id = t.task_id
+    inner join st_story s
+    on h.story_id = s.story_id
+    inner join ex_task et
+    on t.task_id = et.task_id
     group by s.ID, t.ID"""
 hour.transformAndLoad(targetDS)
 

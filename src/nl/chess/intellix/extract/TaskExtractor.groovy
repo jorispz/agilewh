@@ -32,12 +32,6 @@ class TaskExtractor extends AgileFantExtractor {
         def tasks = sourceSql.rows("""
           select * from tasks """)
 
-        targetSql.execute("""
-          INSERT INTO ex_task
-            (task_id, task_name, has_original_estimate, has_effort_left, original_estimate, effort_left, state_id, state, sprint_id, story_id)
-          VALUES
-          (-1, 'None', 0, 0, 0, 0, -1, 'Unknown', -1, -1)""")
-
         targetSql.withTransaction {
             targetSql.withBatch(50, 'insert into ex_task (task_id, task_name, has_original_estimate, has_effort_left, original_estimate, effort_left, state_id, sprint_id, story_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
                 tasks.each {
@@ -66,6 +60,27 @@ class TaskExtractor extends AgileFantExtractor {
         where t.story_id = s.id
         and t.story_id is not null""")
 
+        def tasksWithoutStory = targetSql.rows("""
+            select distinct t.sprint_id, s.name as sprint_name, prj.id as project_id, prj.name as project_name, prd.id as product_id, prd.name as product_name from ex_task t
+            inner join ex_sprint s
+            on s.id = t.sprint_id
+            inner join ex_project prj
+            on s.project_id = prj.id
+            inner join ex_product prd
+            on prj.product_id = prd.id
+            where t.story_id is null""")
+        int id = -1;
+        tasksWithoutStory.each {
+            int projectID = it.project_id
+            targetSql.execute("""
+              INSERT INTO ex_story
+              (id, name, state_id, state, has_points, has_value, story_points, story_value, backlog_id, parent_id, parent_name, product_id, product_name, project_id, project_name, sprint_id, sprint_name)
+              VALUES
+              ($id, 'None', -1, 'Unknown', 0, 0, 0, 0, null, null, null, $it.product_id, $it.product_name, $it.project_id, $it.project_name, $it.sprint_id, $it.sprint_name);
+            """)
+            targetSql.execute("""update ex_task set story_id = $id where story_id is null and sprint_id=$it.sprint_id""")
+            id--
+        }
 
 
     }
