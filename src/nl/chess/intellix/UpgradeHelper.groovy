@@ -37,10 +37,6 @@ class UpgradeHelper implements Upgradeable {
 		    		task_id		 bigint not null,
 		    		task_name    varchar(255) not null,
 		    		task_state   varchar(35) not null,
-		    		sprint_id    bigint not null,
-		    		sprint_name  varchar(255) not null,
-		    		project_id   bigint not null,
-		    		project_name varchar(255) not null,
 
 					constraint primary key (ID),
 					index (type1hash)
@@ -57,10 +53,6 @@ class UpgradeHelper implements Upgradeable {
                     task_id      bigint not null,
                     task_name    varchar(255) not null,
                     task_state   varchar(35) not null,
-                    sprint_id    bigint not null,
-                    sprint_name  varchar(255) not null,
-                    project_id   bigint not null,
-                    project_name varchar(255) not null,
 
 					unique index (ID),
 					unique index (rowid),
@@ -84,6 +76,11 @@ class UpgradeHelper implements Upgradeable {
                     story_value     int not null,
                     story_points_present boolean not null,
                     story_value_present boolean not null,
+                    sprint_id    bigint not null,
+                    sprint_name  varchar(255) not null,
+                    project_id   bigint not null,
+                    project_name varchar(255) not null,
+
 
                     constraint primary key (ID),
                     index (type1hash)
@@ -104,6 +101,10 @@ class UpgradeHelper implements Upgradeable {
                     story_value     int not null,
                     story_points_present boolean not null,
                     story_value_present boolean not null,
+                    sprint_id    bigint not null,
+                    sprint_name  varchar(255) not null,
+                    project_id   bigint not null,
+                    project_name varchar(255) not null,
 
 					unique index (ID),
 					unique index (rowid),

@@ -71,14 +71,10 @@ task.name = 'task'
 task.naturalKeyColumns = ['task_ID']
 task.transformSQL = """
 	insert into st_task
-	   (task_id, task_name, task_state, sprint_id, sprint_name, project_id, project_name)
+	   (task_id, task_name, task_state)
 	select
-		t.task_id, t.task_name, t.state, t.sprint_id, sp.name, sp.project_id, pr.name
+		t.task_id, t.task_name, t.state
 	from ex_task t
-	inner join ex_sprint sp
-	on t.sprint_id = sp.id
-	inner join ex_project pr
-	on sp.project_id = pr.id
 """
 task.transformAndLoad(targetDS)
 
@@ -87,9 +83,9 @@ story.name='story'
 story.naturalKeyColumns = ['story_id']
 story.transformSQL = """
     insert into st_story
-        (story_id, story_name, story_state, story_points, story_value, story_points_present, story_value_present)
+        (story_id, story_name, story_state, story_points, story_value, story_points_present, story_value_present, sprint_id, sprint_name, project_id, project_name)
     select
-        id, name, state, story_points, story_value, has_points, has_value
+        id, name, state, story_points, story_value, has_points, has_value, sprint_id, sprint_name, project_id, project_name
     from ex_story
 """
 story.transformAndLoad(targetDS);
