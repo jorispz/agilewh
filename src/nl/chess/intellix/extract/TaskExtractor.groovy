@@ -36,7 +36,7 @@ class TaskExtractor extends AgileFantExtractor {
             targetSql.withBatch(50, 'insert into ex_task (task_id, task_name, has_original_estimate, has_effort_left, original_estimate, effort_left, state_id, sprint_id, story_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
                 tasks.each {
                     boolean hasEstimate = (it.originalestimate != null);
-                    boolean hasEffort = it.effortLeft != null;
+                    boolean hasEffort = it.effortleft != null;
                     int originalEstimate = (hasEstimate ? it.originalestimate : 0);
                     int effortLeft = (hasEffort ? it.effortleft : originalEstimate);
 
