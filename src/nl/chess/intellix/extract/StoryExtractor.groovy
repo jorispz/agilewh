@@ -39,22 +39,36 @@ class StoryExtractor extends AgileFantExtractor {
         def tasks = sourceSql.rows("""
           select * from stories """)
 
+        boolean iterationIDPresent = false;
         targetSql.withTransaction {
-            targetSql.withBatch(50, 'insert into ex_story (id, name, state_id, has_points, has_value, story_points, story_value, backlog_id, parent_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
+            targetSql.withBatch(50, 'insert into ex_story (id, name, state_id, has_points, has_value, story_points, story_value, backlog_id, sprint_id, parent_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
                 tasks.each {
                     boolean hasPoints = (it.storyPoints != null);
                     boolean hasValue = (it.storyValue != null);
+                    iterationIDPresent = it.containsKey("iteration_id");
+
                     int points = (hasPoints ? it.storyPoints : 0);
                     int value = (hasValue ? it.storyValue : 0);
-                    stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, it.parent_id])
+                    if (iterationIDPresent) {
+                        stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, it.iteration_id, it.parent_id])
+                    } else {
+                        stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, null, it.parent_id])
+                    }
                 }
             }
         }
 
-        targetSql.execute("""
-          update ex_story st, ex_sprint sp
-          set st.sprint_id = st.backlog_id, st.sprint_name = sp.name
-          where st.backlog_id = sp.id""")
+        if (iterationIDPresent) {
+            targetSql.execute("""
+              update ex_story st, ex_sprint sp
+              set st.sprint_name = sp.name
+              where st.sprint_id = sp.id""")
+        } else {
+            targetSql.execute("""
+              update ex_story st, ex_sprint sp
+              set st.sprint_id = st.backlog_id, st.sprint_name = sp.name
+              where st.backlog_id = sp.id""")
+        }
         targetSql.execute("""
           update ex_story st, ex_project pr
           set st.project_id = st.backlog_id, st.project_name = pr.name
@@ -100,7 +114,7 @@ class StoryExtractor extends AgileFantExtractor {
             targetSql.execute("""insert into ex_project (id, name, product_id) values ($id, 'None', $productID)""")
             targetSql.execute("""update ex_story set project_id = $id, project_name = 'None' where project_id is null and product_id=$productID""")
             id--
-         }
+        }
 
         def storiesWithoutSprint = targetSql.rows("""select distinct project_id from ex_story where sprint_id is null""")
         id = -1;
