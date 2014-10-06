@@ -80,6 +80,7 @@ class UpgradeHelper implements Upgradeable {
                     sprint_name  varchar(255) not null,
                     project_id   bigint not null,
                     project_name varchar(255) not null,
+                    label varchar(255) null,
 
 
                     constraint primary key (ID),
@@ -105,6 +106,7 @@ class UpgradeHelper implements Upgradeable {
                     sprint_name  varchar(255) not null,
                     project_id   bigint not null,
                     project_name varchar(255) not null,
+                    label varchar(255) null,
 
 					unique index (ID),
 					unique index (rowid),

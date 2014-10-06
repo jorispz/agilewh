@@ -31,17 +31,20 @@ class StoryExtractor extends AgileFantExtractor {
                     project_id          int,
                     project_name        varchar(255),
                     sprint_id           int,
-                    sprint_name         varchar(255)
+                    sprint_name         varchar(255),
+                    label               varchar(255)
 				) engine=InnoDB
 		''')
 
         LOG.info('Extracting stories from AgileFant.')
         def tasks = sourceSql.rows("""
-          select * from stories """)
+          select * from stories s
+          inner join (select story_id, group_concat(displayName) as label from labels group by story_id) l on l.story_id = s.id
+        """)
 
         boolean iterationIDPresent = false;
         targetSql.withTransaction {
-            targetSql.withBatch(50, 'insert into ex_story (id, name, state_id, has_points, has_value, story_points, story_value, backlog_id, sprint_id, parent_id) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
+            targetSql.withBatch(50, 'insert into ex_story (id, name, state_id, has_points, has_value, story_points, story_value, backlog_id, sprint_id, parent_id, label) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
                 tasks.each {
                     boolean hasPoints = (it.storyPoints != null);
                     boolean hasValue = (it.storyValue != null);
@@ -50,9 +53,9 @@ class StoryExtractor extends AgileFantExtractor {
                     int points = (hasPoints ? it.storyPoints : 0);
                     int value = (hasValue ? it.storyValue : 0);
                     if (iterationIDPresent) {
-                        stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, it.iteration_id, it.parent_id])
+                        stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, it.iteration_id, it.parent_id, it.label])
                     } else {
-                        stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, null, it.parent_id])
+                        stmt.addBatch([it.id, it.name, it.state, hasPoints, hasValue, points, value, it.backlog_id, null, it.parent_id, it.label])
                     }
                 }
             }

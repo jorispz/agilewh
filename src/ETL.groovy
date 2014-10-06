@@ -1,17 +1,12 @@
-import groovy.lang.Binding
-import groovy.sql.Sql
+import com.mchange.v2.c3p0.ComboPooledDataSource
 import nl.chess.intellix.UpgradeHelper
 import nl.chess.intellix.core.Dimension
-import nl.chess.intellix.core.ViewCreator;
+import nl.chess.intellix.core.ViewCreator
 import nl.chess.intellix.extract.*
 import nl.chess.it.upgrademanager.UpgradeManager
 import nl.chess.it.upgrademanager.jdbc.JDBCUpgradeManagerFactoryBean
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import com.mchange.v2.c3p0.ComboPooledDataSource
-
 
 Logger LOG = LoggerFactory.getLogger(ETL.class);
 
@@ -83,9 +78,9 @@ story.name='story'
 story.naturalKeyColumns = ['story_id']
 story.transformSQL = """
     insert into st_story
-        (story_id, story_name, story_state, story_points, story_value, story_points_present, story_value_present, sprint_id, sprint_name, project_id, project_name)
+        (story_id, story_name, story_state, story_points, story_value, story_points_present, story_value_present, sprint_id, sprint_name, project_id, project_name, label)
     select
-        id, name, state, story_points, story_value, has_points, has_value, sprint_id, sprint_name, project_id, project_name
+        id, name, state, story_points, story_value, has_points, has_value, sprint_id, sprint_name, project_id, project_name, label
     from ex_story
 """
 story.transformAndLoad(targetDS);
