@@ -38,8 +38,8 @@ class StoryExtractor extends AgileFantExtractor {
 
         LOG.info('Extracting stories from AgileFant.')
         def tasks = sourceSql.rows("""
-          select * from stories s
-          inner join (select story_id, group_concat(displayName) as label from labels group by story_id) l on l.story_id = s.id
+            select * from stories s
+            left outer join (select story_id, group_concat(displayName) as label from labels group by story_id) l on l.story_id = s.id
         """)
 
         boolean iterationIDPresent = false;
