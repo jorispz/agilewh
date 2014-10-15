@@ -82,6 +82,21 @@ class TaskExtractor extends AgileFantExtractor {
             id--
         }
 
+        def storiesWithoutTasks = targetSql.rows("""
+          select * from ex_story s where s.id not in (select t.story_id from ex_task t)""")
+        int minTaskID = targetSql.firstRow("select min(task_id) as task_id from ex_task")[0];
+
+        storiesWithoutTasks.each {
+            minTaskID--;
+            targetSql.execute("""
+            INSERT INTO ex_task
+            (task_id, task_name, has_original_estimate, has_effort_left, original_estimate, effort_left, state_id, state, sprint_id, story_id)
+            VALUES
+            ($minTaskID, 'None', false, false, 0, 0, -1, 'Unknown', $it.sprint_id, $it.id)""")
+        }
+
+
+
 
     }
 

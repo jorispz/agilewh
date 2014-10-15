@@ -50,21 +50,24 @@ class HourExtractor extends AgileFantExtractor {
             inner join ex_story st
             on h.story_id = st.id
             where task_id is null""")
-        int id = -1;
+
+        int minTaskID = targetSql.firstRow("select min(task_id) as task_id from ex_task")[0];
+
         hoursWithoutTask.each {
+            minTaskID--;
             targetSql.execute("""
               INSERT INTO ex_task
               (task_id, task_name, has_original_estimate, has_effort_left, original_estimate, effort_left, state_id, state, sprint_id, story_id)
               VALUES
-              ($id, 'None', 0, 0, 0, 0, -1, 'Unknown', $it.sprint_id, $it.story_id)""")
-            targetSql.execute("""update ex_hourentry set task_id = $id where task_id is null and story_id=$it.story_id""")
-            id--
+              ($minTaskID, 'None', 0, 0, 0, 0, -1, 'Unknown', $it.sprint_id, $it.story_id)""")
+            targetSql.execute("""update ex_hourentry set task_id = $minTaskID where task_id is null and story_id=$it.story_id""")
         }
 
         targetSql.execute("""
             insert into ex_hourentry (minutes_spent, story_id, task_id)
             select 0 as minutes_spent, story_id, task_id from ex_task where ex_task.task_id not in (select task_id from ex_hourentry)
         """)
+
 
 
     }
