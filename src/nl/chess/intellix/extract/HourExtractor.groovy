@@ -64,9 +64,13 @@ class HourExtractor extends AgileFantExtractor {
             targetSql.execute("""update ex_hourentry set task_id = $minTaskID where task_id is null and story_id=$it.story_id""")
         }
 
+
+        // TODO: the 'is not null' clause in the query below deals with a corner case in the EQ project where hours were booked directly on a backlog.
+        // This needs to be dealt with properly at some point, but for now we will ignore them (528 minutes in total)
         targetSql.execute("""
             insert into ex_hourentry (minutes_spent, story_id, task_id)
-            select 0 as minutes_spent, story_id, task_id from ex_task where ex_task.task_id not in (select task_id from ex_hourentry)
+
+            select 0 as minutes_spent, story_id, task_id from ex_task where ex_task.task_id not in (select distinct task_id from ex_hourentry where task_id is not null)
         """)
 
 
