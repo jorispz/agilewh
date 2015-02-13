@@ -16,6 +16,7 @@ class HourExtractor extends AgileFantExtractor {
         targetSql.execute('''
 				create table ex_hourentry (
                     minutes_spent   bigint,
+                    backlog_id      int,
                     story_id        int,
                     task_id         int,
 
@@ -26,14 +27,14 @@ class HourExtractor extends AgileFantExtractor {
 
         LOG.info('Extracting tasks from AgileFant.')
         def tasks = sourceSql.rows("""
-          select sum(h.minutesSpent) as minutesSpent, h.story_id, h.task_id
+          select sum(h.minutesSpent) as minutesSpent, h.backlog_id, h.story_id, h.task_id
           from hourentries h
-          group by h.story_id, h.task_id""")
+          group by h.backlog_id, h.story_id, h.task_id""")
 
         targetSql.withTransaction {
-            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, story_id, task_id) values (?, ?, ?)') { stmt ->
+            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, backlog_id, story_id, task_id) values (?, ?, ?)') { stmt ->
                 tasks.each {
-                    stmt.addBatch([it.minutesSpent, it.story_id, it.task_id])
+                    stmt.addBatch([it.minutesSpent, it.backlog_id, it.story_id, it.task_id])
                 }
             }
         }
@@ -67,6 +68,10 @@ class HourExtractor extends AgileFantExtractor {
             insert into ex_hourentry (minutes_spent, story_id, task_id)
             select 0 as minutes_spent, story_id, task_id from ex_task where ex_task.task_id not in (select task_id from ex_hourentry)
         """)
+
+
+
+
 
 
 
