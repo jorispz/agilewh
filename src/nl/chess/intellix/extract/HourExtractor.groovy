@@ -32,7 +32,7 @@ class HourExtractor extends AgileFantExtractor {
           group by h.backlog_id, h.story_id, h.task_id""")
 
         targetSql.withTransaction {
-            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, backlog_id, story_id, task_id) values (?, ?, ?)') { stmt ->
+            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, backlog_id, story_id, task_id) values (?, ?, ?, ?)') { stmt ->
                 tasks.each {
                     stmt.addBatch([it.minutesSpent, it.backlog_id, it.story_id, it.task_id])
                 }
