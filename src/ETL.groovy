@@ -87,7 +87,7 @@ story.transformAndLoad(targetDS);
 
 Dimension hour = new Dimension()
 hour.name='hourentry'
-hour.naturalKeyColumns = ['s_id', 't_id']
+hour.naturalKeyColumns = ['s_id', 't_id', 'date_year', 'date_month', 'date_day', 'user_full_name']
 hour.transformSQL = """
     insert into st_hourentry
         (s_id, t_id, original_estimate_minutes, original_estimate_hours, effort_spent_minutes, effort_spent_hours, effort_left_minutes, effort_left_hours, date_year, date_month, date_day, user_full_name)
