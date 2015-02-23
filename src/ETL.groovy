@@ -90,9 +90,9 @@ hour.name='hourentry'
 hour.naturalKeyColumns = ['s_id', 't_id']
 hour.transformSQL = """
     insert into st_hourentry
-        (s_id, t_id, original_estimate_minutes, original_estimate_hours, effort_spent_minutes, effort_spent_hours, effort_left_minutes, effort_left_hours)
+        (s_id, t_id, original_estimate_minutes, original_estimate_hours, effort_spent_minutes, effort_spent_hours, effort_left_minutes, effort_left_hours, date_year, date_month, date_day, user_full_name)
     select
-         s.ID, t.ID, sum(et.original_estimate), sum(et.original_estimate)/60, sum(minutes_spent), sum(minutes_spent)/60, sum(et.effort_left), sum(et.effort_left)/60
+         s.ID, t.ID, sum(et.original_estimate), sum(et.original_estimate)/60, sum(minutes_spent), sum(minutes_spent)/60, sum(et.effort_left), sum(et.effort_left)/60, date_year, date_month, date_day, user_full_name
     from ex_hourentry h
     inner join st_task t
     on h.task_id = t.task_id

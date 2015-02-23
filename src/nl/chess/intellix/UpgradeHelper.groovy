@@ -130,6 +130,10 @@ class UpgradeHelper implements Upgradeable {
                     effort_left_hours         decimal(12, 1) not null,
                     effort_spent_minutes      int not null,
                     effort_spent_hours        decimal(12, 1) not null,
+                    date_year                 int,
+                    date_month                int,
+                    date_day                  int,
+                    user_full_name            varchar(255),
 
                     constraint primary key (ID),
                     index (type1hash),
@@ -153,6 +157,10 @@ class UpgradeHelper implements Upgradeable {
                     effort_left_hours         decimal(12, 1) not null,
                     effort_spent_minutes      int not null,
                     effort_spent_hours        decimal(12, 1) not null,
+                    date_year                 int,
+                    date_month                int,
+                    date_day                  int,
+                    user_full_name            varchar(255),
 
 					unique index (ID),
 					unique index (rowid),

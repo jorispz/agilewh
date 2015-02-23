@@ -19,6 +19,10 @@ class HourExtractor extends AgileFantExtractor {
                     backlog_id      int,
                     story_id        int,
                     task_id         int,
+                    date_year                 int,
+                    date_month                int null,
+                    date_day                  int null,
+                    user_full_name            varchar(255),
 
                     index(story_id),
                     index(task_id)
@@ -27,14 +31,33 @@ class HourExtractor extends AgileFantExtractor {
 
         LOG.info('Extracting tasks from AgileFant.')
         def tasks = sourceSql.rows("""
-          select sum(h.minutesSpent) as minutesSpent, h.backlog_id, h.story_id, h.task_id
-          from hourentries h
-          group by h.backlog_id, h.story_id, h.task_id""")
+          SELECT
+                SUM(h.minutesSpent) AS minutesSpent,
+                h.backlog_id,
+                h.story_id,
+                h.task_id,
+                year(h.date) as date_year,
+                month(date) date_month,
+                dayofmonth(date) as date_day,
+                u.fullName
+            FROM
+                hourentries h
+            INNER JOIN
+                users u
+            on h.user_id = u.id
+            GROUP BY
+                h.backlog_id,
+                h.story_id,
+                h.task_id,
+                date_year,
+                date_month,
+                date_day,
+                u.fullName""")
 
         targetSql.withTransaction {
-            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, backlog_id, story_id, task_id) values (?, ?, ?, ?)') { stmt ->
+            targetSql.withBatch(50, 'insert into ex_hourentry (minutes_spent, backlog_id, story_id, task_id, date_year, date_month, date_day, user_full_name) values (?, ?, ?, ?, ?, ?, ?, ?)') { stmt ->
                 tasks.each {
-                    stmt.addBatch([it.minutesSpent, it.backlog_id, it.story_id, it.task_id])
+                    stmt.addBatch([it.minutesSpent, it.backlog_id, it.story_id, it.task_id, it.date_year, it.date_month, it.date_day, it.fullName])
                 }
             }
         }
