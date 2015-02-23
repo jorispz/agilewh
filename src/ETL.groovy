@@ -100,7 +100,10 @@ hour.transformSQL = """
     on h.story_id = s.story_id
     inner join ex_task et
     on t.task_id = et.task_id
-    group by s.ID, t.ID"""
+    group by s.ID, t.ID,    date_year,
+    date_month,
+    date_day,
+    user_full_name"""
 hour.transformAndLoad(targetDS)
 
 LOG.info('Recreating reporting views.')
